@@ -75,9 +75,9 @@ plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
-source ~/dotfiles/zsh/aliases.zsh
-source ~/dotfiles/zsh/exports.zsh
-source ~/dotfiles/zsh/functions.zsh
+source $HOME/.config/zsh/aliases.zsh
+source $HOME/.config/zsh/exports.zsh
+source $HOME/.config/zsh/functions.zsh
 
 # User configuration
 
