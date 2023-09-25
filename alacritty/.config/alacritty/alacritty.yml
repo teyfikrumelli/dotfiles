@@ -859,7 +859,9 @@ key_bindings:
 
 # (Windows, Linux, and BSD only)
 - { key: V,              mods: Control, mode: ~Vi,        action: Paste            }
+- { key: V,              mods: Control|Shift, chars: "\x16"            }
 - { key: C,              mods: Control,                   action: Copy             }
+- { key: C,              mods: Control|Shift, chars: "\x03"         }
 #- { key: F,              mods: Control|Shift, mode: ~Search,    action: SearchForward    }
 #- { key: B,              mods: Control|Shift, mode: ~Search,    action: SearchBackward   }
 #- { key: C,              mods: Control|Shift, mode: Vi|~Search, action: ClearSelection   }
