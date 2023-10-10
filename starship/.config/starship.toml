@@ -20,8 +20,6 @@ $haskell\
 $python\
 [](fg:color_blue bg:color_bg3)\
 $docker_context\
-[](fg:color_bg3 bg:color_bg1)\
-$time\
 [ ](fg:color_bg1)\
 $line_break$character"""
 
@@ -73,8 +71,8 @@ format = '[ $user ]($style)'
 [directory]
 style = "fg:color_fg0 bg:color_yellow"
 format = "[ $path ]($style)"
-truncation_length = 3
-truncation_symbol = "…/"
+truncation_length = 1
+truncation_symbol = ""
 
 [directory.substitutions]
 "Documents" = "󰈙 "
