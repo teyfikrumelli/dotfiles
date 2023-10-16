@@ -88,6 +88,7 @@ return packer.startup(function(use)
       "ibhagwan/fzf-lua",              -- optional
     },
   })
+  use("airblade/vim-gitgutter")
 
   -- dev productivity tools
   use("theprimeagen/harpoon")
