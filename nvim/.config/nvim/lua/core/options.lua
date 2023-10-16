@@ -28,3 +28,5 @@ opt.clipboard:append("unnamedplus")
 opt.splitright = true
 opt.splitbelow = true
 
+-- update time
+opt.updatetime = 100
