@@ -30,3 +30,6 @@ opt.splitbelow = true
 
 -- update time
 opt.updatetime = 100
+
+-- line wrapping
+opt.wrap = true
