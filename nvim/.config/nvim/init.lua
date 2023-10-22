@@ -1,5 +1,6 @@
 require("plugins")
 require("plugins.cmp")
+require("plugins.dadbod")
 require("plugins.lualine")
 require("plugins.mason")
 require("plugins.navigator")

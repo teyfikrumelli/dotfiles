@@ -90,6 +90,15 @@ return packer.startup(function(use)
   })
   use("airblade/vim-gitgutter")
 
+  -- database
+  use({
+    "tpope/vim-dadbod",
+    requires = {
+      "kristijanhusak/vim-dadbod-ui",
+      "kristijanhusak/vim-dadbod-completion",
+    }
+  })
+
   -- dev productivity tools
   use("theprimeagen/harpoon")
   use("folke/zen-mode.nvim")
