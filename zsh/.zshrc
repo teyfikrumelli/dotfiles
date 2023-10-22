@@ -79,6 +79,10 @@ source $HOME/.config/zsh/aliases.zsh
 source $HOME/.config/zsh/exports.zsh
 source $HOME/.config/zsh/functions.zsh
 
+if [ -f ~/.zshrc.local ]; then
+  source ~/.zshrc.local
+fi
+
 # User configuration
 
 # export MANPATH="/usr/local/man:$MANPATH"
