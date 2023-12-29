@@ -57,6 +57,7 @@ return packer.startup(function(use)
   -- managing & installing lsp servers, linters & formatters
   use("williamboman/mason.nvim")
   use("williamboman/mason-lspconfig.nvim")
+  use("neovim/nvim-lspconfig")
 
   use({
     "ray-x/navigator.lua",
@@ -103,6 +104,9 @@ return packer.startup(function(use)
   use("theprimeagen/harpoon")
   use("folke/zen-mode.nvim")
   use("mbbill/undotree")
+
+  -- rust
+  use("simrat39/rust-tools.nvim")
 
   if packer_bootstrap then
     require("packer").sync()
