@@ -28,5 +28,6 @@ cmp.setup({
     { name = "buffer" },   -- text within current buffer
     { name = "path" },     -- file system paths
     { name = "luasnip" },  -- snippets
+    { name = "vim-dadbod-completion" },  -- database
   }),
 })
