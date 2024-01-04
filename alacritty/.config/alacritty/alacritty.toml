@@ -1,0 +1,100 @@
+live_config_reload = true
+
+[[colors.indexed_colors]]
+color = "0xff9e64"
+index = 16
+
+[[colors.indexed_colors]]
+color = "0xdb4b4b"
+index = 17
+
+[colors.bright]
+black = "0x414868"
+blue = "0x7aa2f7"
+cyan = "0x7dcfff"
+green = "0x9ece6a"
+magenta = "0xbb9af7"
+red = "0xf7768e"
+white = "0xc0caf5"
+yellow = "0xe0af68"
+
+[colors.normal]
+black = "0x15161e"
+blue = "0x7aa2f7"
+cyan = "0x7dcfff"
+green = "0x9ece6a"
+magenta = "0xbb9af7"
+red = "0xf7768e"
+white = "0xa9b1d6"
+yellow = "0xe0af68"
+
+[colors.primary]
+background = "0x1a1b26"
+foreground = "0xc0caf5"
+
+[cursor]
+thickness = 0.18
+vi_mode_style = "Block"
+
+[font]
+size = 16.0
+
+[font.bold]
+family = "SauceCodePro Nerd Font"
+style = "Bold"
+
+[font.bold_italic]
+family = "SauceCodePro Nerd Font"
+style = "Bold Italic"
+
+[font.italic]
+family = "SauceCodePro Nerd Font"
+style = "Italic"
+
+[font.normal]
+family = "SauceCodePro Nerd Font"
+style = "Regular"
+
+[[keyboard.bindings]]
+action = "Paste"
+key = "V"
+mode = "~Vi"
+mods = "Control"
+
+[[keyboard.bindings]]
+chars = "\u0016"
+key = "V"
+mods = "Control|Shift"
+
+[[keyboard.bindings]]
+action = "Copy"
+key = "C"
+mods = "Control"
+
+[[keyboard.bindings]]
+chars = "\u0003"
+key = "C"
+mods = "Control|Shift"
+
+[[keyboard.bindings]]
+action = "ToggleFullscreen"
+key = "F10"
+
+[mouse]
+hide_when_typing = true
+
+[scrolling]
+history = 10000
+
+[selection]
+save_to_clipboard = true
+
+[window]
+decorations = "full"
+decorations_theme_variant = "None"
+dynamic_padding = false
+opacity = 0.95
+
+[window.padding]
+x = 2
+y = 2
