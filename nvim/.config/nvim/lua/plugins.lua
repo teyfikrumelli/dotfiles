@@ -31,7 +31,7 @@ end
 return packer.startup(function(use)
   use("wbthomason/packer.nvim")
 
-  use("folke/tokyonight.nvim")          -- colorscheme
+ use({ "folke/tokyonight.nvim", tag = "v3.0.1" }) -- colorscheme
 
   use("christoomey/vim-tmux-navigator") -- tmux & split window navigation
 
@@ -55,10 +55,6 @@ return packer.startup(function(use)
   use({ "nvim-telescope/telescope.nvim", branch = "0.1.x" })        -- fuzzy finder
 
   -- managing & installing lsp servers, linters & formatters
-  use("williamboman/mason.nvim")
-  use("williamboman/mason-lspconfig.nvim")
-  use("neovim/nvim-lspconfig")
-
   use({
     "ray-x/navigator.lua",
     requires = {
