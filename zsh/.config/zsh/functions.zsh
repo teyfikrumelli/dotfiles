@@ -6,3 +6,14 @@ getuuid() {
   (osascript -e "display notification with title \"⌘-V to paste\" subtitle \"$uuid\"" &) >/dev/null 2>&1
   echo -n "$uuid" | pbcopy
 }
+
+fsearch() {
+  fzf --preview 'bat --color=always --style=numbers --line-range=:500 {}' | xargs nvim
+}
+
+search() {
+  rg --no-heading --line-number --color=always "$1" \
+    | fzf --ansi \
+    | awk -F: '{print "+"$2" "$1}' \
+    | xargs -r nvim
+}
