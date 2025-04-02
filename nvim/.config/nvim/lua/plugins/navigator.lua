@@ -3,8 +3,23 @@ if not status then
   return
 end
 
+local function copy_diagnostics()
+  local diagnostics = vim.diagnostic.get(0) -- 0 for current buffer
+  if not diagnostics or #diagnostics == 0 then
+    vim.notify("No diagnostics to copy.", vim.log.levels.WARN)
+    return
+  end
+
+  local diagnostic_text = ""
+  for _, diag in ipairs(diagnostics) do
+    diagnostic_text = diagnostic_text .. diag.message .. "\n"
+  end
+
+  vim.fn.setreg("+", diagnostic_text) -- "+" register is the system clipboard
+  vim.notify("Diagnostics copied to clipboard.", vim.log.levels.INFO)
+end
+
 navigator.setup({
-  mason           = true,
   default_mapping = false,
   keymaps         = {
     { key = 'gr',         func = require('navigator.reference').async_ref, desc = 'async_ref' },
@@ -64,6 +79,7 @@ navigator.setup({
       func = require('navigator.codeAction').range_code_action,
       desc = 'range_code_action',
     },
+    { key = "<Leader>cd", func = copy_diagnostics, desc = "Copy Diagnostics" },
     -- { key = '<Leader>re', func = 'rename()' },
     { key = '<Space>rn',  func = require('navigator.rename').rename, desc = 'rename' },
     { key = '<Leader>gi', func = vim.lsp.buf.incoming_calls,         desc = 'incoming_calls' },
