@@ -35,10 +35,14 @@
 "   <Space>fh   Search Vim help tags
 "   <Space>e    Toggle NERDTree sidebar
 "   <Space>o    Reveal current file in NERDTree
+"   (Inside NERDTree folder tree:
+"     t = open in new tab, T = open in new tab silently,
+"     Enter / o = open in editor buffer, s = vertical split, i = horizontal split)
 "   <Space>a    Harpoon: Mark current file
-"   Ctrl + e    Harpoon: Toggle quick menu
-"   F1 - F4     Harpoon: Jump directly to file 1-4
-"   (Inside FZF: Enter = open, Ctrl+v = vsplit, Ctrl+x = split, Ctrl+t = tab)
+"   Ctrl + e    Harpoon: Toggle quick menu (Enter/o = open, t = new tab, T = silent tab, dd = delete, q/Esc = close)
+"   F1 - F4     Harpoon: Jump directly to file 1-4 (also <Space>1 - <Space>4)
+"   (Inside FZF <Space>ff / <Space>fb:
+"     Enter = open, Ctrl+t = new tab, Ctrl+v = vsplit, Ctrl+x = split, Ctrl+d = delete buffer in <Space>fb)
 "
 " 4. WINDOWS, SPLITS, TABS & GENERAL
 " ----------------------------------------------------------------------------
@@ -60,10 +64,15 @@
 "   <Space>p    Paste from register 0
 "   <Space>d    Delete to black hole register (without overwriting clipboard)
 "
-" 5. GIT
+" 5. GIT & DOCKER (Fugitive, Lazygit & Lazydocker)
 " ----------------------------------------------------------------------------
-"   <Space>n    Open Neogit
-"   <Space>gs   Git status (:Git)
+"   <Space>n    Open interactive Git status in full tab (:tab Git, Neogit equivalent)
+"               Inside Git status:
+"                 s = stage, u = unstage, - = toggle stage, = = toggle inline diff
+"                 cc = commit, ca = amend, P = push, F = pull, gq = close
+"   <Space>lg   Open Lazygit in a full tab
+"   <Space>ld   Open Lazydocker in a full tab
+"   <Space>gs   Git status split (:Git)
 "   <Space>gd   Git diff split (:Gdiffsplit)
 "   <Space>gb   Git blame (:Git blame)
 "
@@ -155,7 +164,6 @@ call plug#begin('~/.vim/plugged')
   Plug 'neoclide/coc.nvim', {'branch': 'release'}
 
   " Git
-  Plug 'NeogitOrg/neogit'
   Plug 'airblade/vim-gitgutter'
   Plug 'tpope/vim-fugitive'
 
@@ -170,7 +178,6 @@ call plug#begin('~/.vim/plugged')
   " Plug 'honza/vim-snippets'
 
   " Productivity
-  Plug 'ThePrimeagen/harpoon'
   Plug 'junegunn/goyo.vim'          " zen-mode alternative
   Plug 'mbbill/undotree'
   Plug 'tpope/vim-dispatch'
@@ -227,6 +234,9 @@ set clipboard=unnamed,unnamedplus
 set splitright
 set splitbelow
 
+" Allow switching buffers without saving first
+set hidden
+
 " Update time
 set updatetime=100
 
@@ -278,9 +288,13 @@ nnoremap <leader>c :Bdelete<CR>
 " ----------------------------------------------------------------------------
 
 " NERDTree (neo-tree alternative: <Space>e toggle, <Space>o find file)
+let g:NERDTreeHijackNetrw = 0
 let g:nerdtree_tabs_open_on_console_startup = 0
+let g:nerdtree_tabs_open_on_new_tab = 1
+let g:nerdtree_tabs_focus_on_files = 1
+let g:nerdtree_tabs_synchronize_view = 1
 nnoremap <leader>e :NERDTreeTabsToggle<CR>
-nnoremap <leader>o :NERDTreeFind<CR>
+nnoremap <leader>o :NERDTreeTabsOpen<CR>:NERDTreeFind<CR>
 let NERDTreeShowHidden = 1
 let NERDTreeIgnore = ['^\.git$', '^node_modules$']
 let NERDTreeMinimalUI = 1
@@ -288,32 +302,201 @@ let NERDTreeMinimalUI = 1
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
 " FZF (telescope alternative: files, live grep, grep word, buffers, help)
-nnoremap <leader>ff :Files<CR>
-nnoremap <leader>fs :Rg<CR>
-nnoremap <leader>fc :Rg <C-r><C-w><CR>
-nnoremap <leader>fb :Buffers<CR>
+function! s:FzfBuffersDeleteExit(delete_file, code) abort
+  if filereadable(a:delete_file)
+    for l:line in readfile(a:delete_file)
+      let l:b = matchstr(get(split(l:line, "\t", 1), 2, ''), '\[\zs[0-9]*\ze\]')
+      if !empty(l:b)
+        silent! execute 'Bdelete ' . l:b
+      endif
+    endfor
+    call delete(a:delete_file)
+  endif
+endfunction
+
+function! s:FzfBuffers() abort
+  call s:HarpoonFocusEditWindow()
+  let l:delete_file = tempname()
+  let l:bind = 'ctrl-d:execute-silent(echo {} >> ' . fzf#shellescape(l:delete_file) . ')+exclude'
+  call fzf#vim#buffers('', {
+        \ 'exit': function('s:FzfBuffersDeleteExit', [l:delete_file]),
+        \ 'options': ['--bind', l:bind, '--header', 'Ctrl-D: Delete Buffer']
+        \ })
+endfunction
+
+nnoremap <silent> <leader>ff :call <SID>HarpoonFocusEditWindow()<CR>:Files<CR>
+nnoremap <silent> <leader>fs :call <SID>HarpoonFocusEditWindow()<CR>:Rg<CR>
+nnoremap <silent> <leader>fc :call <SID>HarpoonFocusEditWindow()<CR>:Rg <C-r><C-w><CR>
+nnoremap <silent> <leader>fb :call <SID>FzfBuffers()<CR>
 nnoremap <leader>fh :Helptags<CR>
 
 let g:fzf_action = {
   \ 'ctrl-t': 'tab split',
   \ 'ctrl-x': 'split',
-  \ 'ctrl-v': 'vsplit',
-  \ 'ctrl-d': 'Bdelete'
+  \ 'ctrl-v': 'vsplit'
   \ }
 
 " FZF with hidden files
 let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --glob "!.git/*"'
 
-" Neogit
-nnoremap <leader>n :Neogit<CR>
+" Git & Docker UI (Fugitive full-tab status, Lazygit & Lazydocker)
+nnoremap <leader>n :tab Git<CR>
+nnoremap <leader>lg :tab term ++close lazygit<CR>
+nnoremap <leader>ld :tab term ++close lazydocker<CR>
 
-" Harpoon (<Space>a mark file, Ctrl+e menu, F1-F4 jump to file 1-4)
-nnoremap <leader>a :lua require("harpoon.mark").add_file()<CR>
-nnoremap <C-e> :lua require("harpoon.ui").toggle_quick_menu()<CR>
-nnoremap <F1> :lua require("harpoon.ui").nav_file(1)<CR>
-nnoremap <F2> :lua require("harpoon.ui").nav_file(2)<CR>
-nnoremap <F3> :lua require("harpoon.ui").nav_file(3)<CR>
-nnoremap <F4> :lua require("harpoon.ui").nav_file(4)<CR>
+" Harpoon (native Vim implementation: <Space>a mark, Ctrl+e menu, F1-F4 / <Space>1-4 jump)
+let g:harpoon_cache_dir = expand('~/.cache/vim-harpoon')
+if !isdirectory(g:harpoon_cache_dir)
+  call mkdir(g:harpoon_cache_dir, 'p')
+endif
+let s:harpoon_prev_winid = 0
+
+function! s:HarpoonIsSpecialWin(winnr) abort
+  let l:bt = getwinvar(a:winnr, '&buftype')
+  let l:ft = getwinvar(a:winnr, '&filetype')
+  let l:bname = bufname(winbufnr(a:winnr))
+  return l:bt !=# '' || l:ft ==# 'nerdtree' || l:bname =~# '^NERD_tree_' || l:bname ==# '__Harpoon__'
+endfunction
+
+function! s:HarpoonFocusEditWindow() abort
+  if s:harpoon_prev_winid != 0
+    let l:prev_nr = win_id2win(s:harpoon_prev_winid)
+    if l:prev_nr > 0 && !s:HarpoonIsSpecialWin(l:prev_nr)
+      execute l:prev_nr . 'wincmd w'
+      return
+    endif
+  endif
+  if !s:HarpoonIsSpecialWin(winnr())
+    return
+  endif
+  for l:w in range(1, winnr('$'))
+    if !s:HarpoonIsSpecialWin(l:w)
+      execute l:w . 'wincmd w'
+      return
+    endif
+  endfor
+  vertical botright new
+endfunction
+
+function! s:HarpoonDataFile() abort
+  let l:key = substitute(getcwd(), '[^A-Za-z0-9_.-]', '_', 'g')
+  return g:harpoon_cache_dir . '/' . l:key . '.txt'
+endfunction
+
+function! s:HarpoonGetFiles() abort
+  let l:file = s:HarpoonDataFile()
+  if !filereadable(l:file)
+    return []
+  endif
+  return filter(readfile(l:file), 'v:val !~# "^\s*$"')
+endfunction
+
+function! s:HarpoonSaveFiles(files) abort
+  let l:clean = filter(copy(a:files), 'v:val !~# "^\s*$"')
+  call writefile(l:clean, s:HarpoonDataFile())
+endfunction
+
+function! HarpoonAddFile() abort
+  let l:path = expand('%:.')
+  if empty(l:path) || s:HarpoonIsSpecialWin(winnr())
+    echo "Harpoon: Cannot mark NERDTree or special buffer."
+    return
+  endif
+  let l:files = s:HarpoonGetFiles()
+  let l:idx = index(l:files, l:path)
+  if l:idx == -1
+    call add(l:files, l:path)
+    call s:HarpoonSaveFiles(l:files)
+    let l:idx = len(l:files) - 1
+    echo 'Harpoon: Added [' . (l:idx + 1) . '] ' . l:path
+  else
+    echo 'Harpoon: Already marked at [' . (l:idx + 1) . '] ' . l:path
+  endif
+endfunction
+
+function! HarpoonNavFile(index) abort
+  let l:files = s:HarpoonGetFiles()
+  if a:index < 1 || a:index > len(l:files)
+    echo 'Harpoon: Slot ' . a:index . ' is empty.'
+    return
+  endif
+  let l:target = l:files[a:index - 1]
+  if bufwinnr('__Harpoon__') != -1
+    execute bufwinnr('__Harpoon__') . 'wincmd c'
+  endif
+  call s:HarpoonFocusEditWindow()
+  execute 'edit ' . fnameescape(l:target)
+endfunction
+
+function! s:HarpoonMenuSelect(open_cmd) abort
+  let l:target = trim(getline('.'))
+  let l:lines = getline(1, '$')
+  call s:HarpoonSaveFiles(l:lines)
+  if a:open_cmd ==# 'tab_silent'
+    if !empty(l:target)
+      let l:menu_win = win_getid()
+      execute 'tabedit ' . fnameescape(l:target)
+      call win_gotoid(l:menu_win)
+    endif
+    return
+  endif
+  close
+  call s:HarpoonFocusEditWindow()
+  if !empty(l:target)
+    execute a:open_cmd . ' ' . fnameescape(l:target)
+  endif
+endfunction
+
+function! s:HarpoonMenuClose() abort
+  if bufname('%') ==# '__Harpoon__'
+    call s:HarpoonSaveFiles(getline(1, '$'))
+    close
+    call s:HarpoonFocusEditWindow()
+  endif
+endfunction
+
+function! HarpoonToggleMenu() abort
+  let l:win = bufwinnr('__Harpoon__')
+  if l:win != -1
+    execute l:win . 'wincmd w'
+    call s:HarpoonMenuClose()
+    return
+  endif
+  if !s:HarpoonIsSpecialWin(winnr())
+    let s:harpoon_prev_winid = win_getid()
+  endif
+  call s:HarpoonFocusEditWindow()
+  let s:harpoon_prev_winid = win_getid()
+  let l:files = s:HarpoonGetFiles()
+  belowright 8new __Harpoon__
+  setlocal buftype=acwrite bufhidden=wipe noswapfile nobuflisted
+  setlocal number norelativenumber cursorline nowrap
+  call setline(1, l:files)
+  setlocal nomodified
+  nnoremap <buffer><silent> <CR> :call <SID>HarpoonMenuSelect('edit')<CR>
+  nnoremap <buffer><silent> o :call <SID>HarpoonMenuSelect('edit')<CR>
+  nnoremap <buffer><silent> t :call <SID>HarpoonMenuSelect('tabedit')<CR>
+  nnoremap <buffer><silent> <C-t> :call <SID>HarpoonMenuSelect('tabedit')<CR>
+  nnoremap <buffer><silent> T :call <SID>HarpoonMenuSelect('tab_silent')<CR>
+  nnoremap <buffer><silent> s :call <SID>HarpoonMenuSelect('vsplit')<CR>
+  nnoremap <buffer><silent> i :call <SID>HarpoonMenuSelect('split')<CR>
+  nnoremap <buffer><silent> q :call <SID>HarpoonMenuClose()<CR>
+  nnoremap <buffer><silent> <Esc> :call <SID>HarpoonMenuClose()<CR>
+  nnoremap <buffer><silent> <C-e> :call <SID>HarpoonMenuClose()<CR>
+  autocmd BufWriteCmd <buffer> call s:HarpoonSaveFiles(getline(1, '$')) | setlocal nomodified
+  autocmd BufLeave <buffer> call s:HarpoonSaveFiles(getline(1, '$'))
+endfunction
+
+nnoremap <silent> <leader>a :call HarpoonAddFile()<CR>
+nnoremap <silent> <C-e> :call HarpoonToggleMenu()<CR>
+nnoremap <silent> <F1> :call HarpoonNavFile(1)<CR>
+nnoremap <silent> <F2> :call HarpoonNavFile(2)<CR>
+nnoremap <silent> <F3> :call HarpoonNavFile(3)<CR>
+nnoremap <silent> <F4> :call HarpoonNavFile(4)<CR>
+nnoremap <silent> <leader>1 :call HarpoonNavFile(1)<CR>
+nnoremap <silent> <leader>2 :call HarpoonNavFile(2)<CR>
+nnoremap <silent> <leader>3 :call HarpoonNavFile(3)<CR>
+nnoremap <silent> <leader>4 :call HarpoonNavFile(4)<CR>
 
 " Goyo (zen-mode alternative)
 nnoremap <leader>z :Goyo<CR>
@@ -551,19 +734,48 @@ augroup END
 " ----------------------------------------------------------------------------
 " Autocommands
 " ----------------------------------------------------------------------------
+function! s:StartupNERDTree() abort
+  " Prevent vim-nerdtree-tabs VimEnterHandler from resetting s:nerdtree_globally_active to 0
+  silent! autocmd! NERDTreeTabs VimEnter
+  if exists('s:std_in')
+    return
+  endif
+  if argc() == 1 && isdirectory(argv()[0])
+    execute 'cd ' . fnameescape(argv()[0])
+    enew
+    NERDTreeTabsOpen
+    wincmd p
+  elseif argc() == 0
+    NERDTreeTabsOpen
+    wincmd p
+  endif
+endfunction
+
 augroup MyAutoCmds
   autocmd!
   " Auto-resize splits when terminal is resized
   autocmd VimResized * wincmd =
 
-  " 1. Fix the 'vim .' issue: Open tree on left, blank space on right
   autocmd StdinReadPre * let s:std_in=1
-  autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists('s:std_in') |
-      \ execute 'NERDTree' argv()[0] | wincmd p | enew | execute 'cd '.argv()[0] | endif
-
-  " 2. Automatically start NERDTree if no files were specified (just typing `vim`)
-  autocmd VimEnter * if argc() == 0 && !exists('s:std_in') | NERDTree | wincmd p | endif
+  autocmd VimEnter * call <SID>StartupNERDTree()
 augroup END
+
+" If NERDTree is already open when reloading ~/.vimrc, ensure NERDTreeTabs mirroring is active
+if v:vim_did_enter
+  for s:w in range(1, winnr('$'))
+    if getwinvar(s:w, '&filetype') ==# 'nerdtree'
+      let s:cur_win = win_getid()
+      if !exists('t:NERDTreeBufName')
+        silent! execute s:w . 'wincmd c'
+      endif
+      silent! NERDTreeTabsOpen
+      call win_gotoid(s:cur_win)
+      unlet s:cur_win
+      break
+    endif
+  endfor
+  unlet! s:w
+endif
 
 " ============================================================================
 " End of Configuration
