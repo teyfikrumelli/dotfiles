@@ -44,10 +44,11 @@ call plug#begin('~/.vim/plugged')
   Plug 'airblade/vim-gitgutter'
   Plug 'tpope/vim-fugitive'
 
-  " Database
+  " Database & PSQL
   Plug 'tpope/vim-dadbod'
   Plug 'kristijanhusak/vim-dadbod-ui'
   Plug 'kristijanhusak/vim-dadbod-completion'
+  Plug 'lifepillar/pgsql.vim'
 
   " Snippets (requires Python - use coc-snippets instead)
   " Plug 'SirVer/ultisnips'
@@ -57,9 +58,23 @@ call plug#begin('~/.vim/plugged')
   Plug 'ThePrimeagen/harpoon'
   Plug 'junegunn/goyo.vim'          " zen-mode alternative
   Plug 'mbbill/undotree'
+  Plug 'tpope/vim-dispatch'
+  Plug 'jiangmiao/auto-pairs'
+  Plug 'tpope/vim-commentary'
 
   " Rust
   Plug 'rust-lang/rust.vim'
+  Plug 'cespare/vim-toml', { 'branch': 'main' }
+
+  " Golang
+  Plug 'fatih/vim-go', { 'do': ':GoUpdateBinaries' }
+
+  " JavaScript / TypeScript
+  Plug 'pangloss/vim-javascript'
+  Plug 'maxmellon/vim-jsx-pretty'
+
+  " Python
+  Plug 'vim-python/python-syntax'
 
   " Treesitter-like syntax highlighting
   Plug 'sheerun/vim-polyglot'
@@ -198,6 +213,20 @@ nnoremap <leader>ee oif err != nil {<CR>}<esc>Oreturn err
 " ----------------------------------------------------------------------------
 " CoC (LSP & Completion)
 " ----------------------------------------------------------------------------
+" Auto-install required CoC extensions (Rust, Go, JS/TS, Python, SQL, TOML, JSON)
+let g:coc_global_extensions = [
+      \ 'coc-rust-analyzer',
+      \ 'coc-toml',
+      \ 'coc-go',
+      \ 'coc-tsserver',
+      \ 'coc-eslint',
+      \ 'coc-prettier',
+      \ 'coc-pyright',
+      \ 'coc-sql',
+      \ 'coc-snippets',
+      \ 'coc-json'
+      \ ]
+
 " Use tab for trigger completion with characters ahead and navigate
 inoremap <silent><expr> <TAB>
       \ coc#pum#visible() ? coc#pum#next(1) :
@@ -290,10 +319,28 @@ nnoremap <leader>gd :Gdiffsplit<CR>
 nnoremap <leader>gb :Git blame<CR>
 
 " ----------------------------------------------------------------------------
-" Database (vim-dadbod)
+" Database & PSQL (vim-dadbod & pgsql.vim)
 " ----------------------------------------------------------------------------
-" Dadbod completion
-autocmd FileType sql setlocal omnifunc=vim_dadbod_completion#omni
+let g:sql_type_default = 'pgsql'
+let g:db_ui_use_nerd_fonts = 1
+let g:db_ui_save_location = '~/.local/share/db_ui'
+let g:db_ui_execute_on_save = 0
+
+" Dadbod UI global keymaps
+nnoremap <leader>du :DBUIToggle<CR>
+nnoremap <leader>df :DBUIFindBuffer<CR>
+nnoremap <leader>dr :DBUIRenameBuffer<CR>
+nnoremap <leader>dl :DBUILastQueryInfo<CR>
+
+augroup PsqlKeymaps
+  autocmd!
+  autocmd BufNewFile,BufRead *.psql,*.pgsql setfiletype sql
+  autocmd FileType sql,mysql,plsql,pgsql setlocal omnifunc=vim_dadbod_completion#omni
+  autocmd FileType sql,mysql,plsql,pgsql nnoremap <buffer> <leader>de <Plug>(DBUI_ExecuteQuery)
+  autocmd FileType sql,mysql,plsql,pgsql vnoremap <buffer> <leader>de <Plug>(DBUI_ExecuteQuery)
+  autocmd FileType sql,mysql,plsql,pgsql nnoremap <buffer> <leader>ds <Plug>(DBUI_SaveQuery)
+  autocmd FileType sql,mysql,plsql,pgsql nnoremap <buffer> <leader>dp :CocCommand prettier.formatFile<CR>
+augroup END
 
 " ----------------------------------------------------------------------------
 " Snippets (coc-snippets)
@@ -305,6 +352,83 @@ imap <C-j> <Plug>(coc-snippets-expand-jump)
 " Rust
 " ----------------------------------------------------------------------------
 let g:rustfmt_autosave = 1
+let g:rust_cargo_check_tests = 1
+let g:rust_cargo_check_benches = 1
+
+augroup RustKeymaps
+  autocmd!
+  autocmd FileType rust nnoremap <buffer> <leader>rr :RustRun<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rt :RustTest<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rb :Cbuild<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rc :Ccheck<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rm :CocCommand rust-analyzer.expandMacro<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rh :CocCommand document.toggleInlayHint<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rd :CocCommand rust-analyzer.openDocs<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rp :CocCommand rust-analyzer.parentModule<CR>
+  autocmd FileType rust nnoremap <buffer> <leader>rj :CocCommand rust-analyzer.joinLines<CR>
+augroup END
+
+" ----------------------------------------------------------------------------
+" Golang
+" ----------------------------------------------------------------------------
+let g:go_fmt_command = 'goimports'
+let g:go_autodetect_gopath = 1
+let g:go_def_mapping_enabled = 0
+let g:go_gopls_enabled = 0
+let g:go_code_completion_enabled = 0
+let g:go_doc_keywordprg_enabled = 0
+let g:go_highlight_types = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_function_calls = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_extra_types = 1
+let g:go_highlight_build_constraints = 1
+
+augroup GoKeymaps
+  autocmd!
+  autocmd FileType go nnoremap <buffer> <leader>gr :GoRun<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gt :GoTest<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gf :GoTestFunc<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gb :GoBuild<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gc :GoCoverageToggle<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gi :GoImports<CR>
+  autocmd FileType go nnoremap <buffer> <leader>ga :GoAlternate<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gta :GoAddTags<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gtr :GoRemoveTags<CR>
+augroup END
+
+" ----------------------------------------------------------------------------
+" JavaScript / TypeScript
+" ----------------------------------------------------------------------------
+let g:javascript_plugin_jsdoc = 1
+let g:javascript_plugin_ngdoc = 1
+let g:javascript_plugin_flow = 1
+
+augroup JavaScriptKeymaps
+  autocmd!
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jr :!node %<CR>
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jt :Dispatch npm test<CR>
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jo :CocCommand tsserver.organizeImports<CR>
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jf :CocCommand eslint.executeAutofix<CR>
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jp :CocCommand prettier.formatFile<CR>
+  autocmd FileType javascript,javascriptreact,typescript,typescriptreact nnoremap <buffer> <leader>jd :CocCommand tsserver.goToSourceDefinition<CR>
+augroup END
+
+" ----------------------------------------------------------------------------
+" Python
+" ----------------------------------------------------------------------------
+let g:python_highlight_all = 1
+
+augroup PythonKeymaps
+  autocmd!
+  autocmd FileType python setlocal tabstop=4 shiftwidth=4 softtabstop=4 expandtab
+  autocmd FileType python nnoremap <buffer> <leader>pr :!python3 %<CR>
+  autocmd FileType python nnoremap <buffer> <leader>pt :Dispatch pytest<CR>
+  autocmd FileType python nnoremap <buffer> <leader>po :CocCommand pyright.organizeimports<CR>
+  autocmd FileType python nnoremap <buffer> <leader>pf :call CocActionAsync('format')<CR>
+  autocmd FileType python nnoremap <buffer> <leader>pi :CocCommand python.startREPL<CR>
+augroup END
 
 " ----------------------------------------------------------------------------
 " Autocommands
