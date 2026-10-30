@@ -298,6 +298,7 @@ let g:nerdtree_tabs_open_on_console_startup = 0
 let g:nerdtree_tabs_open_on_new_tab = 1
 let g:nerdtree_tabs_focus_on_files = 1
 let g:nerdtree_tabs_synchronize_view = 1
+let g:nerdtree_tabs_autofind = 1
 let g:nerdtree_tabs_autoclose = 0
 nnoremap <leader>e :NERDTreeTabsToggle<CR>
 nnoremap <leader>o :NERDTreeTabsOpen<CR>:NERDTreeFind<CR>
