@@ -97,6 +97,7 @@
 "     <Space>gf   Run test function under cursor (:GoTestFunc)
 "     <Space>gb   Build (:GoBuild)
 "     <Space>gc   Toggle test coverage (:GoCoverageToggle)
+"     <Space>gC   Clear coverage highlighting (:GoCoverageClear)
 "     <Space>gi   Organize imports (:GoImports)
 "     <Space>ga   Alternate between .go and _test.go (:GoAlternate)
 "     <Space>gta  Add struct tags (:GoAddTags)
@@ -201,6 +202,9 @@ call plug#begin('~/.vim/plugged')
 
   " Treesitter-like syntax highlighting
   Plug 'sheerun/vim-polyglot'
+
+" Use vim-go as the sole Go syntax provider; Polyglot bundles the same Go pack.
+let g:polyglot_disabled = ['go']
 
 call plug#end()
 
@@ -685,7 +689,7 @@ let g:go_doc_keywordprg_enabled = 0
 let g:go_highlight_types = 1
 let g:go_highlight_fields = 1
 let g:go_highlight_functions = 1
-let g:go_highlight_function_calls = 1
+let g:go_highlight_function_calls = 0
 let g:go_highlight_operators = 1
 let g:go_highlight_extra_types = 1
 let g:go_highlight_build_constraints = 1
@@ -697,6 +701,7 @@ augroup GoKeymaps
   autocmd FileType go nnoremap <buffer> <leader>gf :GoTestFunc<CR>
   autocmd FileType go nnoremap <buffer> <leader>gb :GoBuild<CR>
   autocmd FileType go nnoremap <buffer> <leader>gc :GoCoverageToggle<CR>
+  autocmd FileType go nnoremap <buffer> <leader>gC :GoCoverageClear<CR>
   autocmd FileType go nnoremap <buffer> <leader>gi :GoImports<CR>
   autocmd FileType go nnoremap <buffer> <leader>ga :GoAlternate<CR>
   autocmd FileType go nnoremap <buffer> <leader>gta :GoAddTags<CR>
