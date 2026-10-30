@@ -1,0 +1,22 @@
+vim/.vimrc
+  s_89df7f0601b7b3::t_dba7be6dbdefd6 692
+  s_89df7f0601b7b3::t_fbe4dc53074e86 206-208
+  s_89df7f0601b7b3::t_f45de6662acc83 704
+  s_89df7f0601b7b3::t_88142e5bd4500b 100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b32009034a3935476f22e9373f7aaea0db486a6f",
+  "prompts": {},
+  "sessions": {
+    "s_89df7f0601b7b3": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "39f0e97c-cc30-48a0-85f2-f6cf21ce11fc",
+        "model": "gpt-luna"
+      },
+      "human_author": "teyfikrumelli <teyfik.rumelli@deliveryhero.com>"
+    }
+  }
+}
