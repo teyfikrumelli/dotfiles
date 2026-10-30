@@ -72,6 +72,7 @@
 "                 cc = commit, ca = amend, P = push, F = pull, gq = close
 "   <Space>lg   Open Lazygit in a full tab
 "   <Space>ld   Open Lazydocker in a full tab
+"   <Space>tt   Open a shell in a new tab (closes when the shell exits: exit or Ctrl+d)
 "   <Space>gs   Git status split (:Git)
 "   <Space>gd   Git diff split (:Gdiffsplit)
 "   <Space>gb   Git blame (:Git blame)
@@ -293,11 +294,13 @@ let g:nerdtree_tabs_open_on_console_startup = 0
 let g:nerdtree_tabs_open_on_new_tab = 1
 let g:nerdtree_tabs_focus_on_files = 1
 let g:nerdtree_tabs_synchronize_view = 1
+let g:nerdtree_tabs_autoclose = 0
 nnoremap <leader>e :NERDTreeTabsToggle<CR>
 nnoremap <leader>o :NERDTreeTabsOpen<CR>:NERDTreeFind<CR>
 let NERDTreeShowHidden = 1
 let NERDTreeIgnore = ['^\.git$', '^node_modules$']
 let NERDTreeMinimalUI = 1
+let g:NERDTreeWinSize = 30
 " Close vim if NERDTree is the only window
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
 
@@ -343,6 +346,7 @@ let $FZF_DEFAULT_COMMAND = 'rg --files --hidden --glob "!.git/*"'
 nnoremap <leader>n :tab Git<CR>
 nnoremap <leader>lg :tab term ++close lazygit<CR>
 nnoremap <leader>ld :tab term ++close lazydocker<CR>
+nnoremap <leader>tt :tab term ++close<CR>
 
 " Harpoon (native Vim implementation: <Space>a mark, Ctrl+e menu, F1-F4 / <Space>1-4 jump)
 let g:harpoon_cache_dir = expand('~/.cache/vim-harpoon')
@@ -751,8 +755,66 @@ function! s:StartupNERDTree() abort
   endif
 endfunction
 
+" Fit the NERDTree window to its longest line (min g:NERDTreeWinSize, max half the screen).
+" Also overrides the stale width vim-nerdtree-tabs restores on tab switches.
+function! s:FitNERDTreeWidth(...) abort
+  if winnr('$') < 2
+    return
+  endif
+  for l:w in range(1, winnr('$'))
+    if getwinvar(l:w, '&filetype') !=# 'nerdtree'
+      continue
+    endif
+    try
+      let l:buf = winbufnr(l:w)
+      let l:lines = getbufline(l:buf, 1, '$')
+      " The root path header is truncated to the window width at render time, so it is
+      " excluded from the measurement to avoid feeding back into the width.
+      let l:root = match(l:lines, '^\(/\|<\)')
+      if l:root < 0
+        continue
+      endif
+      let l:tree = getbufvar(l:buf, 'NERDTree', {})
+      let l:tail = empty(l:tree) ? '' : l:tree.root.path.getLastPathComponent(1)
+      " Keep room for the root folder name (the rest of the path is concealed, see below).
+      let l:longest = strdisplaywidth(l:tail) + 2
+      for l:line in l:lines[l:root + 1 :]
+        let l:longest = max([l:longest, strdisplaywidth(l:line)])
+      endfor
+      let l:target = min([max([l:longest + 2, g:NERDTreeWinSize]), &columns / 2])
+      if winwidth(l:w) != l:target
+        execute 'vertical ' . l:w . 'resize ' . l:target
+      endif
+      " Redraw a truncated header once the window can show the root folder name in full
+      " (the width check prevents a redraw loop).
+      if !empty(l:tail) && l:lines[l:root] =~# '^<' && stridx(l:lines[l:root], '/' . l:tail) < 0
+            \ && winwidth(l:w) >= strdisplaywidth(l:tail) + 2
+        silent! call win_execute(win_getid(l:w), 'call b:NERDTree.render()')
+      endif
+    catch
+      " The tree can be mid-redraw or closing; the next event retries.
+    endtry
+  endfor
+endfunction
+
+" Close a tab left with only NERDTree (e.g. after a ++close terminal exits). Deferred so the
+" terminal window is fully gone first; vim-nerdtree-tabs' own autoclose errors here.
+function! s:CloseLoneNERDTreeTab(...) abort
+  if &filetype ==# 'nerdtree' && winnr('$') == 1 && tabpagenr('$') > 1
+    tabclose
+  endif
+endfunction
+
 augroup MyAutoCmds
   autocmd!
+  autocmd WinEnter,TabEnter * call timer_start(0, function('<SID>CloseLoneNERDTreeTab'))
+  autocmd FileType nerdtree setlocal nowrap
+  autocmd User NERDTreeInit,NERDTreeNewRoot call timer_start(0, function('<SID>FitNERDTreeWidth'))
+  " Show only the root folder name in the header (hide the leading path and the '<' truncation mark)
+  autocmd Syntax nerdtree syntax match NERDTreeRootPrefix #^\(/\|<\).*/\ze[^/]\+/$# conceal
+  autocmd Syntax nerdtree syntax match NERDTreeRootTruncMark #^<\ze[^/]\+/$# conceal
+  autocmd TabEnter,WinEnter * call timer_start(0, function('<SID>FitNERDTreeWidth'))
+  autocmd CursorMoved,CursorHold,TextChanged * if &filetype ==# 'nerdtree' | call <SID>FitNERDTreeWidth() | endif
   " Auto-resize splits when terminal is resized
   autocmd VimResized * wincmd =
 
