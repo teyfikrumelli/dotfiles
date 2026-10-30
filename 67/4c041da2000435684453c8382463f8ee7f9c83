@@ -1,0 +1,20 @@
+vim/.vimrc
+  s_8347f80a3dd6e2::t_87ac1a074f7b15 297
+  s_8347f80a3dd6e2::t_e34ac2accbb424 75,303,349,758-807,810-817
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "674c041da2000435684453c8382463f8ee7f9c83",
+  "prompts": {},
+  "sessions": {
+    "s_8347f80a3dd6e2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0ab9f4f7-61d7-4ff3-9164-3406b1ff1142",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "teyfikrumelli <teyfik.rumelli@deliveryhero.com>"
+    }
+  }
+}
